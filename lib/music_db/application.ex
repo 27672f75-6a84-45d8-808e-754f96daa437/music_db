@@ -1,4 +1,4 @@
-defmodule MusicDb.Application do
+defmodule MusicDB.Application do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
   @moduledoc false
@@ -13,7 +13,7 @@ defmodule MusicDb.Application do
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: MusicDb.Supervisor]
+    opts = [strategy: :one_for_one, name: MusicDB.Supervisor]
     Supervisor.start_link(children, opts)
   end
 end

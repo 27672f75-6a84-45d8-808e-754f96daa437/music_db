@@ -1,8 +1,8 @@
-defmodule MusicDbTest do
+defmodule MusicDBTest do
   use ExUnit.Case
-  doctest MusicDb
+  doctest MusicDB
 
   test "greets the world" do
-    assert MusicDb.hello() == :world
+    assert MusicDB.hello() == :world
   end
 end

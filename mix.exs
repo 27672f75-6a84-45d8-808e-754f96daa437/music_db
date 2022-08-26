@@ -1,4 +1,4 @@
-defmodule MusicDb.MixProject do
+defmodule MusicDB.MixProject do
   use Mix.Project
 
   def project do
@@ -15,7 +15,7 @@ defmodule MusicDb.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {MusicDb.Application, []}
+      mod: {MusicDB.Application, []}
     ]
   end
 
