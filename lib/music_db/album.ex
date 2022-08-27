@@ -1,6 +1,6 @@
 defmodule MusicDB.Album do
   use Ecto.Schema
-  alias MusicDB.{Artist}
+  alias MusicDB.{Artist, Track}
 
   schema "albums" do
     field(:title, :string)
@@ -11,5 +11,6 @@ defmodule MusicDB.Album do
     # 지금 이 스키마와 연관되있는 스키마는 has_one 또는 has_many로 연관되있을수도있다.
     # artist 와 관계를 맺고있고 추후에 :preload 옵션을 추가하여 연관되있는 가수값을 가져올수있다.
     belongs_to(:artist, Artist)
+    has_many(:tracks, Track)
   end
 end
