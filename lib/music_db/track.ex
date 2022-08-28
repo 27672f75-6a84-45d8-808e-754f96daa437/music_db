@@ -1,4 +1,4 @@
-defmodule MusicDb.Track do
+defmodule MusicDB.Track do
   use Ecto.Schema
   alias MusicDB.Album
 
