@@ -7,4 +7,4 @@ config :music_db, MusicDB.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
-  port: 5432
+  port: 15432
