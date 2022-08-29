@@ -31,4 +31,18 @@ defmodule MusicDB.Artist do
       {:preload, :tracks}
     ])
   end
+
+  def get_sort_artist_by_name() do
+    from(artist in __MODULE__, [
+      {:select, artist.name},
+      {:order_by, artist.name}
+    ])
+  end
+
+  def get_desc_sort_artist_by_name() do
+    from(artist in __MODULE__, [
+      {:select, artist.name},
+      {:order_by, [desc: artist.name]}
+    ])
+  end
 end
