@@ -1,7 +1,7 @@
 defmodule MusicDB.Track do
   use Ecto.Schema
   import Ecto.Query
-  alias MusicDB.Album
+  alias MusicDB.{Album, Artist}
 
   schema "tracks" do
     field(:title, :string)
@@ -32,11 +32,41 @@ defmodule MusicDB.Track do
   end
 
   # 주어진 시간 보다 긴 duration을 가진 앨범 아이디 반환
-  def get_duration_group_by_album_id(under_number) do
+  def get_duration_group_by_album_id(over_number) do
     from(track in __MODULE__, [
       {:select, [track.album_id, sum(track.duration)]},
       {:group_by, track.album_id},
-      {:having, sum(track.duration) > ^under_number}
+      {:having, sum(track.duration) > ^over_number}
+    ])
+  end
+
+  # 제공한 duration보다 높은 duration을 가진 track의 앨범 제목과 트랙 제목을 반환함
+  def get_join_track_album_id_title(over_duration) do
+    from(track in __MODULE__, [
+      {:join, album in Album},
+      {:on, track.album_id == album.id},
+      {:where, track.duration > ^over_duration},
+      {:select, [album.title, track.title]}
+    ])
+  end
+
+  def get_join_track_album_id_title_map(over_duration) do
+    from(track in __MODULE__, [
+      {:join, album in Album},
+      {:on, track.album_id == album.id},
+      {:where, track.duration > ^over_duration},
+      {:select, %{album: album.title, track: track.title}}
+    ])
+  end
+
+  def get_join_track_album_artist_map(over_duration) do
+    from(track in __MODULE__, [
+      {:join, album in Album},
+      {:on, track.album_id == album.id},
+      {:join, artist in Artist},
+      {:on, album.artist_id == artist.id},
+      {:where, track.duration > ^over_duration},
+      {:select, %{album: album.title, track: track.title, artist: artist.name}}
     ])
   end
 end
