@@ -17,16 +17,16 @@ defmodule MusicDB.Artist do
     has_many(:tracks, through: [:albums, :tracks])
   end
 
-  def get(artist_name) when is_binary(artist_name) do
+  def get_by_name(artist_name) do
     from(artist in __MODULE__, [
-      {:where, artist.name == ^artist_name},
+      {:where, artist.name == type(^artist_name, :string)},
       {:select, [:name]}
     ])
   end
 
-  def get(id) do
+  def get_by_id(id) do
     from(artist in __MODULE__, [
-      {:where, artist.id == ^id},
+      {:where, artist.id == type(^id, :integer)},
       {:preload, :albums},
       {:preload, :tracks}
     ])
