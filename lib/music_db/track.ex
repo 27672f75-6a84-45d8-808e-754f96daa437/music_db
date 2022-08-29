@@ -55,7 +55,7 @@ defmodule MusicDB.Track do
       {:join, album in Album},
       {:on, track.album_id == album.id},
       {:where, track.duration > ^over_duration},
-      {:select, %{album: album.title, track: track.title}}
+      {:select, %{album_title: album.title, track_title: track.title}}
     ])
   end
 
@@ -66,7 +66,7 @@ defmodule MusicDB.Track do
       {:join, artist in Artist},
       {:on, album.artist_id == artist.id},
       {:where, track.duration > ^over_duration},
-      {:select, %{album: album.title, track: track.title, artist: artist.name}}
+      {:select, %{album: album.title, track_title: track.title, artist_title: artist.name}}
     ])
   end
 end
