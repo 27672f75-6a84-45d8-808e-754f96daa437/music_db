@@ -17,6 +17,13 @@ defmodule MusicDB.Artist do
     has_many(:tracks, through: [:albums, :tracks])
   end
 
+  def get(artist_name) when is_binary(artist_name) do
+    from(artist in __MODULE__, [
+      {:where, artist.name == ^artist_name},
+      {:select, [:name]}
+    ])
+  end
+
   def get(id) do
     from(artist in __MODULE__, [
       {:where, artist.id == ^id},
