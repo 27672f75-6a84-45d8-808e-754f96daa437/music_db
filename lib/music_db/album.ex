@@ -58,4 +58,21 @@ defmodule MusicDB.Album do
       {:select, [track.title]}
     ])
   end
+
+  # 쿼리문에서 쿼리를 바인딩하고
+  # 다음 쿼리에서 바인딩한 쿼리를 갖고 album과 artist의 이름에 접근한 쿼리를 반환함.
+  def get_albums_by_miles do
+    albums_by_miles =
+      from(album in __MODULE__, [
+        {:as, :albums},
+        {:join, artist in Artist},
+        {:as, :artists},
+        {:on, album.artist_id == artist.id},
+        {:where, artist.name == "Miles Davis"}
+      ])
+
+    from([artists: artist, albums: album] in albums_by_miles, [
+      {:select, [album.title, artist.name]}
+    ])
+  end
 end
