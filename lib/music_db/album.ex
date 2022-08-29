@@ -38,4 +38,24 @@ defmodule MusicDB.Album do
     tracks_query = from(track in Track, [{:select, track.title}])
     from(album in __MODULE__, [{:select, album.title}, {:except, ^tracks_query}])
   end
+
+  def get_album_title_list_by_artist_name(artist_name) do
+    from(album in __MODULE__, [
+      {:join, artist in Artist},
+      {:on, album.artist_id == artist.id},
+      {:where, artist.name == type(^artist_name, :string)},
+      {:select, [album.title]}
+    ])
+  end
+
+  def get_track_title_list_by_artist_name(artist_name) do
+    from(album in __MODULE__, [
+      {:join, artist in Artist},
+      {:on, album.artist_id == artist.id},
+      {:join, track in Track},
+      {:on, track.album_id == album.id},
+      {:where, artist.name == type(^artist_name, :string)},
+      {:select, [track.title]}
+    ])
+  end
 end
