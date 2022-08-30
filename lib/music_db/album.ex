@@ -96,4 +96,36 @@ defmodule MusicDB.Album do
       {:select, [album.title, artist.name]}
     ])
   end
+
+  # 주어진 아티스트의 이름을 가진 앨범을 가져오는 쿼리
+  def by_artist(album_query \\ __MODULE__, artist_name) do
+    from(album in album_query, [
+      {:join, artist in Artist},
+      {:on, album.artist_id == artist.id},
+      {:where, artist.name == ^artist_name}
+    ])
+  end
+
+  # 주어진 duration 보다 긴 곡을 가진 앨범을 가져오는 쿼리
+  def with_tracks_longer_than(album_query, duration) do
+    from(album in album_query, [
+      {:join, track in Track},
+      {:on, track.album_id == album.id},
+      {:where, track.duration > ^duration},
+      {:distinct, true}
+    ])
+  end
+
+  def title_only(album_query) do
+    from(album in album_query, [
+      {:select, album.title}
+    ])
+  end
+
+  # 주어진 가수 이름을 가진 앨범에서 주어진 duration 보다 긴 곡을 가진 앨범을 조회하는 쿼리
+  def get_album_by_artist_with_tracks_longer_than_duration_title_onlty(artist_name, duration) do
+    by_artist(artist_name)
+    |> with_tracks_longer_than(duration)
+    |> title_only()
+  end
 end
