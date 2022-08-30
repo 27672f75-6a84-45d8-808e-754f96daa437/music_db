@@ -140,6 +140,42 @@ defmodule MusicDB do
     |> first(:duration)
   end
 
+  def get_track_count_in_album() do
+    from(track in Track, [
+      {:group_by, [track.album_id]},
+      {:select, {track.album_id, count()}}
+    ])
+    |> Repo.all()
+  end
+
+  # has_named_binding? 함수를 통해 이미 이름이 쿼리내에서 바인딩 되었나 확인할수있다.
+  def has_named_binding_in_album_query?() do
+    from(artist in Artist, [
+      {:join, album in Album},
+      {:as, :album},
+      {:on, artist.id == album.artist_id}
+    ])
+    |> has_named_binding?(:album)
+  end
+
+  # 곡이 5개이상 수락된 앨범의 ID를 가져오는 쿼리
+  # having은 그룹화된 쿼리에 where과 같은 기능을한다.
+  def get_has_track_more_than_5_album() do
+    from(track in Track, [
+      {:group_by, [track.album_id]},
+      {:having, count() > 5},
+      {:select, {track.album_id, count()}}
+    ])
+    |> Repo.all()
+  end
+
+  # 앨범 제목이면서도 트랙의 제목인것을 가져옴.
+  # intersect를 사용하면 교집합을 가져옴
+  def get_intersect_albums_and_tracks_title() do
+    tracks_query = from(track in Track, [{:select, track.title}])
+    from(album in Album, [{:select, album.title}, {:intersect, ^tracks_query}])
+  end
+
   def test() do
     %Artist{
       name: "Miles Davis",
