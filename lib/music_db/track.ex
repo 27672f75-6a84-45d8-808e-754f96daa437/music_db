@@ -69,4 +69,13 @@ defmodule MusicDB.Track do
       {:select, %{album: album.title, track_title: track.title, artist_title: artist.name}}
     ])
   end
+
+  def by_title(track_query \\ __MODULE__, title) do
+    from(
+      track in track_query,
+      [
+        {:where, track.title == ^title}
+      ]
+    )
+  end
 end
