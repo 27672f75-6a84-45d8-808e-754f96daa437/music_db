@@ -176,6 +176,59 @@ defmodule MusicDB do
     from(album in Album, [{:select, album.title}, {:intersect, ^tracks_query}])
   end
 
+  # JOIN 시리즈
+
+  def join_artist_album_title() do
+    from(artist in Artist, [
+      {:join, album in Album},
+      {:on, artist.id == album.artist_id},
+      {:select, {artist.name, album.title}}
+    ])
+    |> Repo.all()
+  end
+
+  # 먼저 주어진 테이블 A 기준으로 테이블 B를 조인함.
+  # 합쳐진 왼쪽 테이블에 nil이 나오지 않는 데이터는 모두 반환함.
+  def left_join_artist_album_title() do
+    from(artist in Artist, [
+      {:left_join, album in Album},
+      {:on, artist.id == album.artist_id},
+      {:select, {artist.name, album.title}}
+    ])
+    |> Repo.all()
+  end
+
+  # 이후에 주어진 테이블 B 기준으로 테이블 A를 조인함.
+  # 합쳐진 오른쪽 테이블에 nil이 나오지 않는 데이터는 모두 반환함.
+  def right_join_artist_album_title() do
+    from(artist in Artist, [
+      {:right_join, album in Album},
+      {:on, artist.id == album.artist_id},
+      {:select, {artist.name, album.title}}
+    ])
+    |> Repo.all()
+  end
+
+  # 주어진 테이블을 조건 없이 모두 매칭한다.
+  def cross_join_artist_album_title() do
+    from(artist in Artist, [
+      {:cross_join, album in Album},
+      # {:on, artist.id == album.artist_id},
+      {:select, {artist.name, album.title}}
+    ])
+    |> Repo.all()
+  end
+
+  # 테이블을 합치고 nil이 있는 결과에 상관없이 모두 반환함.
+  def full_join_artist_album_title do
+    from(artist in Artist, [
+      {:full_join, album in Album},
+      {:on, artist.id == album.artist_id},
+      {:select, {artist.name, album.title}}
+    ])
+    |> Repo.all()
+  end
+
   def test() do
     %Artist{
       name: "Miles Davis",
