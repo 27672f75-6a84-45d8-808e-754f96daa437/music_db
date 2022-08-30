@@ -35,7 +35,7 @@ defmodule MusicDB do
   end
 
   # 명시적 바인딩을 하려면 as 키워드를 추가한다.
-  def artist_album_as_binding do
+  def artist_album_as_binding() do
     artist_join_album =
       from(artist in Artist, [
         {:as, :artist},
@@ -51,7 +51,7 @@ defmodule MusicDB do
   end
 
   # 명시적 바인딩은 항상 바인딩 목록의 끝에 위치해야한다.
-  def artist_album_as_mix_binding do
+  def artist_album_as_mix_binding() do
     artist_join_album =
       from(artist in Artist, [
         {:join, album in Album},
@@ -66,7 +66,7 @@ defmodule MusicDB do
   end
 
   # 아직 정의하지 않은 상위 바인딩을 참조해야할때 parent_as 바인딩
-  def artist_album_parent_as_binding do
+  def artist_album_parent_as_binding() do
     child_query =
       from(
         album in Album,
@@ -80,6 +80,55 @@ defmodule MusicDB do
       {:inner_lateral_join, album in subquery(child_query)},
       {:select, {artist.name, album.title}}
     ])
+    |> Repo.all()
+  end
+
+  # distinct를 사용해서 track의 index가 중복된 결과를 제거하여 반환함
+  def distinct_track_by_index() do
+    from(track in Track, [
+      {:distinct, track.index},
+      {:order_by, track.index},
+      {:select, track.title}
+    ])
+    |> Repo.all()
+  end
+
+  # dynamic을 사용한 동적 쿼리 생성
+  def album_by_name_using_dynamic(album_name) do
+    dynamic_query = dynamic([album], album.title == ^album_name)
+
+    from(Album, where: ^dynamic_query) |> Repo.all()
+  end
+
+  # 앨범 제목이면서 트랙의 제목이 아닌것을 가져옴.
+  def except_same_album_track_title() do
+    tracks_query =
+      from(track in Track, [
+        {:select, track.title}
+      ])
+
+    from(album in Album, [
+      {:select, album.title},
+      {:except, ^tracks_query}
+    ])
+    |> Repo.all()
+  end
+
+  # where절이 적용되기전으로 리셋한 결과가 나온다.
+  # join을 리셋하고 싶을때 단, join을 하여 나온 바인딩 결과를 사용하는 절이 있으면 제거 불가능하다.
+  def exclude_join_artist() do
+    artist_album_join_query =
+      from(artist in Artist, [
+        {:join, album in Album},
+        {:on, artist.id == album.artist_id},
+        {:join, track in Track},
+        {:on, track.album_id == album.id},
+        {:where, track.duration > 500},
+        {:order_by, track.title},
+        {:select, track.title}
+      ])
+
+    exclude(artist_album_join_query, :where)
     |> Repo.all()
   end
 
