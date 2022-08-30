@@ -36,7 +36,28 @@ defmodule MusicDB.Album do
   # 앨범 제목이면서 트랙의 제목이 아닌것을 가져옴.
   def get_except_albums_and_tracks_title() do
     tracks_query = from(track in Track, [{:select, track.title}])
-    from(album in __MODULE__, [{:select, album.title}, {:except, ^tracks_query}])
+
+    from(album in __MODULE__, [
+      {:select, album.title},
+      {:except, ^tracks_query}
+    ])
+  end
+
+  # 앨범이름과 곡 이름이 같지 않은 앨범을 가져옴
+  def get_except_albums_and_tracks_last_title() do
+    same_track_album_by_title_query =
+      from(album in __MODULE__, [
+        {:as, :albums},
+        {:join, track in assoc(album, :tracks)},
+        {:on, album.title == track.title},
+        {:distinct, album.title},
+        {:select, album}
+      ])
+
+    from(album in __MODULE__, [
+      {:except, ^same_track_album_by_title_query},
+      {:select, album}
+    ])
   end
 
   def get_album_title_list_by_artist_name(artist_name) do
