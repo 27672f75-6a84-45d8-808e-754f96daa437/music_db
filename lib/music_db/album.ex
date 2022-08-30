@@ -100,9 +100,19 @@ defmodule MusicDB.Album do
   # 주어진 아티스트의 이름을 가진 앨범을 가져오는 쿼리
   def by_artist(album_query \\ __MODULE__, artist_name) do
     from(album in album_query, [
+      {:as, :album},
       {:join, artist in Artist},
+      {:as, :artist},
       {:on, album.artist_id == artist.id},
       {:where, artist.name == ^artist_name}
+    ])
+  end
+
+  def by_artist_or(album_query, artist_name) do
+    from([album: album, artist: artist] in album_query, [
+      # 이곳에서 where절로 한다면 후에 쿼리문에서 AND로 묶여지게된다.
+      {:or_where, artist.name == ^artist_name},
+      {:select, %{artist_name: artist.name, album_title: album.title}}
     ])
   end
 
