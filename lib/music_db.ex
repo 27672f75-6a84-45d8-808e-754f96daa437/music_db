@@ -282,9 +282,55 @@ defmodule MusicDB do
     |> Repo.all()
   end
 
-  def preload_album_track() do
+  def sorted_track_preload_album() do
+    track_query =
+      from(track in Track, [
+        {:order_by, track.duration}
+      ])
+
     from(album in Album, [
-      {:preload, [:tracks]}
+      {:preload, [tracks: ^track_query]}
+    ])
+    |> Repo.all()
+  end
+
+  # 앨범을 모두 가져오고 앨범에서 곡 길이가 duration 이상인 곡을 포함
+  def get_over_duration_track_preload_album(duration) do
+    over_duration_track_query =
+      from(track in Track, [
+        {:where, track.duration > ^duration}
+      ])
+
+    from(album in Album, [
+      {:preload, [tracks: ^over_duration_track_query]}
+    ])
+    |> Repo.all()
+  end
+
+  # reverse_order를 사용하여 쿼리 순서를 반대로 할 수 있다.
+  def get_longest_track_list() do
+    ordered_track_query =
+      from(track in Track, [
+        {:order_by, track.duration}
+      ])
+
+    from(track in reverse_order(ordered_track_query), [
+      {:select, {track.title, track.duration}}
+    ])
+    |> Repo.all()
+  end
+
+  # 가장 긴 10곡의 평균값을 구하는 쿼리
+  # subquery를 사용하여 구현
+  def get_top_10_of_duration_track() do
+    top_10_duration_track_query =
+      from(track in Track, [
+        {:order_by, [desc: :duration]},
+        {:limit, 10}
+      ])
+
+    from(track in subquery(top_10_duration_track_query), [
+      {:select, avg(track.duration)}
     ])
     |> Repo.all()
   end
