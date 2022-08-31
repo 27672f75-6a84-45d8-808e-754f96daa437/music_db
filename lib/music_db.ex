@@ -178,6 +178,8 @@ defmodule MusicDB do
 
   # JOIN 시리즈
 
+  # join에서 join 조건인 on이 주어지지 않는다면 그건 cross join이다.
+  # :join 키워드는 기본적으로 inner_join을 수행한다.
   def join_artist_album_title() do
     from(artist in Artist, [
       {:join, album in Album},
@@ -189,7 +191,8 @@ defmodule MusicDB do
 
   # 먼저 주어진 테이블 A 기준으로 테이블 B를 조인함.
   # 합쳐진 왼쪽 테이블에 nil이 나오지 않는 데이터는 모두 반환함.
-  def left_join_artist_album_title() do
+  # 해당 결과에서 B가 nil인것을 모두 제거하면 LEFT JOIN 제거하지 않으면 LEFT OUTER JOIN이 된다.
+  def left_outer_join_artist_album_title() do
     from(artist in Artist, [
       {:left_join, album in Album},
       {:on, artist.id == album.artist_id},
@@ -198,8 +201,21 @@ defmodule MusicDB do
     |> Repo.all()
   end
 
+  def left_join_artist_album_title() do
+    from(artist in Artist, [
+      {:left_join, album in Album},
+      {:on, artist.id == album.artist_id},
+      {:where, false == is_nil(album.artist_id)},
+      {:select, {artist.name, album.title}}
+    ])
+    |> Repo.all()
+  end
+
+  # 앨범에서 아티스트의 아이디가 없는 앨범을
+
   # 이후에 주어진 테이블 B 기준으로 테이블 A를 조인함.
   # 합쳐진 오른쪽 테이블에 nil이 나오지 않는 데이터는 모두 반환함.
+  # 해당 결과에서 A가 nil인것을 모두 제거하면 RIGHT JOIN 제거하지 않으면 RIGHT OUTER JOIN이 된다.
   def right_join_artist_album_title() do
     from(artist in Artist, [
       {:right_join, album in Album},
@@ -210,10 +226,12 @@ defmodule MusicDB do
   end
 
   # 주어진 테이블을 조건 없이 모두 매칭한다.
+  # cartesian product라고 SQL에 키워드로 존재하였으나, 프로덕트가 SQL이 표준화 진행되면서
+  # ANSI 표준으로 바뀌었는데 그 이름이 CROSS JOIN이 되었다.
+  # 모든 경우를 고려하기 때문에 조인조건을 적을수없다.
   def cross_join_artist_album_title() do
     from(artist in Artist, [
       {:cross_join, album in Album},
-      # {:on, artist.id == album.artist_id},
       {:select, {artist.name, album.title}}
     ])
     |> Repo.all()
@@ -225,6 +243,48 @@ defmodule MusicDB do
       {:full_join, album in Album},
       {:on, artist.id == album.artist_id},
       {:select, {artist.name, album.title}}
+    ])
+    |> Repo.all()
+  end
+
+  # 가장 긴 곡 가져오기
+  # last를 사용하면 쿼리의 수행의 가장 마지막 결과물을 가져올수있다.
+  def get_longest_track() do
+    from(track in Track, [
+      {:select, track}
+    ])
+    |> last(:duration)
+  end
+
+  # limit로 쿼리 결과 제한하기
+  def all_trakcs_by_limit(limit_number) do
+    from(artist in Artist, [
+      {:join, album in Album},
+      {:on, artist.id == album.artist_id},
+      {:join, track in Track},
+      {:on, album.id == track.album_id},
+      {:limit, ^limit_number},
+      {:select, {artist.name, album.title, track.title}}
+    ])
+    |> Repo.all()
+  end
+
+  # offset로 쿼리 결과에서 offset만큼 쿼리 결과를 지운다.
+  def all_trakcs_by_offset(offset_number) do
+    from(artist in Artist, [
+      {:join, album in Album},
+      {:on, artist.id == album.artist_id},
+      {:join, track in Track},
+      {:on, album.id == track.album_id},
+      {:offset, ^offset_number},
+      {:select, {artist.name, album.title, track.title}}
+    ])
+    |> Repo.all()
+  end
+
+  def preload_album_track() do
+    from(album in Album, [
+      {:preload, [:tracks]}
     ])
     |> Repo.all()
   end
