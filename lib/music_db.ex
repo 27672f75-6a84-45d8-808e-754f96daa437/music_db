@@ -3,13 +3,12 @@ defmodule MusicDB do
   import Ecto.Query
 
   def get_track_over_duration(duration) do
-    Repo.all(
-      from(track in Track, [
-        {:where, track.duration > ^duration},
-        {:group_by, track.title},
-        {:select, {track.title, count()}}
-      ])
-    )
+    from(track in Track, [
+      {:where, track.duration > ^duration},
+      {:group_by, track.title},
+      {:select, {track.title, count()}}
+    ])
+    |> Repo.all()
   end
 
   # 바인딩이 여러번 있었을때 ...을 사용하여 바인딩 생략하기
@@ -95,6 +94,7 @@ defmodule MusicDB do
 
   # dynamic을 사용한 동적 쿼리 생성
   def album_by_name_using_dynamic(album_name) do
+    # 300이상
     dynamic_query = dynamic([album], album.title == ^album_name)
 
     from(Album, where: ^dynamic_query) |> Repo.all()
@@ -123,6 +123,7 @@ defmodule MusicDB do
         {:on, artist.id == album.artist_id},
         {:join, track in Track},
         {:on, track.album_id == album.id},
+        {:where, track.title == "All Blues"},
         {:where, track.duration > 500},
         {:order_by, track.title},
         {:select, track.title}
@@ -333,6 +334,36 @@ defmodule MusicDB do
       {:select, avg(track.duration)}
     ])
     |> Repo.all()
+  end
+
+  # 주어진 앨범에 수록된 곡들의 재생횟수를 1씩 증가시켜줌
+  # query안에 :update 키워드로 업데이트할 내용을 적어줄수있다.
+  def increase_play_count_all_tracks_in_album(album_title) do
+    from(track in Track, [
+      {:join, album in Album},
+      {:on, album.id == track.album_id},
+      {:where, album.title == ^album_title},
+      {:update, inc: [number_of_plays: 1]}
+    ])
+    |> Repo.update_all([])
+
+    # # album_query =
+    # from(album in Album, [
+    #   {:where, album.title == ^album_title},
+    #   {:right_join, track in Track},
+    #   {:on, album.id == track.album_id},
+    #   {:update, inc: [number_of_plays: 1]}
+    #   # {:preload, :tracks},
+    #   # {:select, album}
+    # ])
+    # |> Repo.update_all([])
+
+    # Repo.one(album_query).tracks
+
+    # from(album in album_query, [
+    #   {:update, inc: [number_of_plays: 1]}
+    # ])
+    # |> Repo.update_all([])
   end
 
   def test() do
