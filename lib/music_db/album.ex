@@ -1,7 +1,7 @@
 defmodule MusicDB.Album do
   use Ecto.Schema
   import Ecto.Query
-  alias MusicDB.{Artist, Track}
+  alias MusicDB.{Artist, Track, Genre}
 
   schema "albums" do
     field(:title, :string)
@@ -13,6 +13,7 @@ defmodule MusicDB.Album do
     # artist 와 관계를 맺고있고 추후에 :preload 옵션을 추가하여 연관되있는 가수값을 가져올수있다.
     belongs_to(:artist, Artist)
     has_many(:tracks, Track)
+    many_to_many(:genres, Genre, join_through: "albums_genres")
   end
 
   # union을 사용하면 중복결과 없이 고유한 결과만 나온다.
