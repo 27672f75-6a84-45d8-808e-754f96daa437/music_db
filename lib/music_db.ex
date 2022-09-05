@@ -72,6 +72,35 @@ defmodule MusicDB do
     |> Repo.update()
   end
 
+  # 새로운 관계로 레코드 업데이트하기
+  def update_recors_with_associations() do
+    portrait = Repo.get_by(Album, title: "Portrait In Jazz")
+    kind_of_blue = Repo.get_by(Album, title: "Kind Of Blue")
+
+    params = %{
+      "albums" => [
+        # 새로운 앨범
+        %{"title" => "Explorations"},
+        # 기존에 있던 앨범 제목이 바뀜.
+        %{"title" => "Portrait In Jazz (remastered)", "id" => portrait.id},
+        # 기존에 Miles에 있던 곡
+        %{"title" => "Kind Of Blue", "id" => kind_of_blue.id}
+      ]
+    }
+
+    artist =
+      Repo.get_by(Aritst, name: "Bill Evans")
+      |> Repo.preload(:albums)
+
+    {:ok, artist} =
+      artist
+      |> cast(params, [])
+      |> cast_assoc(:albums)
+      |> Repo.update()
+
+    Enum.map(artist.albums, &{&1.id, &1.title})
+  end
+
   def get_track_over_duration(duration) do
     from(track in Track, [
       {:where, track.duration > ^duration},
