@@ -56,6 +56,8 @@ defmodule MusicDB do
   def add_new_genre_assoc_album(album_title, genre_name) do
     Repo.get_by(Album, [{:title, album_title}])
     |> Ecto.build_assoc(:genres, [{:name, genre_name}])
+    # |> Ecto.Changeset.change()
+    # |> Genre.validate_genre()
     |> Repo.insert()
   end
 
