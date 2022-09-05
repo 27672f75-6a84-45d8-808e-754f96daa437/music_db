@@ -3,6 +3,26 @@ defmodule MusicDB do
   import Ecto.Query
   import Ecto.Changeset
 
+  def update_album_average_total_assoc_tracks_durations(album_title) do
+    total_duration =
+      from(track in Track, [
+        {:join, album in Album},
+        {:on, album.id == track.album_id},
+        {:where, album.title == ^album_title}
+      ])
+      |> Repo.all()
+      |> Enum.reduce([{:count, 0}, {:total_duration, 0}], fn track, acc ->
+        [{:count, acc[:count] + 1}, {:total_duration, acc[:total_duration] + track.duration}]
+      end)
+
+    Repo.get_by(Album, [{:title, album_title}])
+    |> Ecto.Changeset.change(%{
+      average_total_tracks_durations:
+        Decimal.div(total_duration[:total_duration], total_duration[:count])
+    })
+    |> Repo.update()
+  end
+
   def new_genre_duplicate(genre_name) do
     spawn(fn ->
       Genre.changeset(%Genre{}, %{name: genre_name})
@@ -396,25 +416,5 @@ defmodule MusicDB do
       {:update, inc: [number_of_plays: 1]}
     ])
     |> Repo.update_all([])
-  end
-
-  def update_album_average_total_assoc_tracks_durations(album_title) do
-    total_duration =
-      from(track in Track, [
-        {:join, album in Album},
-        {:on, album.id == track.album_id},
-        {:where, album.title == ^album_title}
-      ])
-      |> Repo.all()
-      |> Enum.reduce([{:count, 0}, {:total_duration, 0}], fn track, acc ->
-        [{:count, acc[:count] + 1}, {:total_duration, acc[:total_duration] + track.duration}]
-      end)
-
-    Repo.get_by(Album, [{:title, album_title}])
-    |> Ecto.Changeset.change(%{
-      average_total_tracks_durations:
-        Decimal.div(total_duration[:total_duration], total_duration[:count])
-    })
-    |> Repo.update()
   end
 end
