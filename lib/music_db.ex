@@ -1,6 +1,26 @@
 defmodule MusicDB do
-  alias MusicDB.{Album, Artist, Repo, Track}
+  alias MusicDB.{Album, Artist, Repo, Track, Genre}
   import Ecto.Query
+
+  def new_genre_duplicate(genre_name) do
+    spawn(fn ->
+      Genre.changeset(%Genre{}, %{name: genre_name})
+      |> Repo.insert()
+      |> case do
+        {:ok, _album} -> IO.puts("Success!")
+        {:error, changeset} -> IO.inspect(changeset.errors)
+      end
+    end)
+
+    spawn(fn ->
+      Genre.changeset(%Genre{}, %{name: genre_name})
+      |> Repo.insert()
+      |> case do
+        {:ok, _album} -> IO.puts("Success!")
+        {:error, changeset} -> IO.inspect(changeset.errors)
+      end
+    end)
+  end
 
   def get_track_over_duration(duration) do
     from(track in Track, [
