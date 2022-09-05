@@ -2,8 +2,9 @@ defmodule MusicDB do
   alias MusicDB.{Album, Artist, Repo, Track, Genre}
   import Ecto.Query
   import Ecto.Changeset
+  alias Ecto.Multi
 
-  def update_album_average_total_assoc_tracks_durations(album_title) do
+  def get_album_with_average_total_assoc_tracks_durations(album_title) do
     total_duration =
       from(track in Track, [
         {:join, album in Album},
@@ -15,38 +16,46 @@ defmodule MusicDB do
         [{:count, acc[:count] + 1}, {:total_duration, acc[:total_duration] + track.duration}]
       end)
 
-    Repo.get_by(Album, [{:title, album_title}])
-    |> Ecto.Changeset.change(%{
-      average_total_tracks_durations:
-        Decimal.div(total_duration[:total_duration], total_duration[:count])
-    })
-    |> Repo.update()
+    %Album{} = album = Repo.get_by(Album, [{:title, album_title}])
+
+    %Album{
+      album
+      | average_total_tracks_durations:
+          Decimal.div(total_duration[:total_duration], total_duration[:count])
+    }
+
+    # API 사용자한테 보내기
   end
 
   def new_genre_duplicate(genre_name) do
-    spawn(fn ->
-      Genre.changeset(%Genre{}, %{name: genre_name})
-      |> Repo.insert()
-      |> case do
-        {:ok, _album} -> IO.puts("Success!")
-        {:error, changeset} -> IO.inspect(changeset.errors)
-      end
-    end)
+    pid1 =
+      spawn(fn ->
+        Genre.changeset(%Genre{}, %{name: genre_name})
+        |> Repo.insert()
+        |> case do
+          {:ok, _album} -> IO.puts("Success!")
+          {:error, changeset} -> IO.inspect(changeset.errors)
+        end
+      end)
 
-    spawn(fn ->
-      Genre.changeset(%Genre{}, %{name: genre_name})
-      |> Repo.insert()
-      |> case do
-        {:ok, _album} -> IO.puts("Success!")
-        {:error, changeset} -> IO.inspect(changeset.errors)
-      end
-    end)
+    pid2 =
+      spawn(fn ->
+        Genre.changeset(%Genre{}, %{name: genre_name})
+        |> Repo.insert()
+        |> case do
+          {:ok, _album} -> IO.puts("Success!")
+          {:error, changeset} -> IO.inspect(changeset.errors)
+        end
+      end)
+
+    {pid1, pid2}
   end
 
   def new_album_assoc_genre(album_title, genre_name) do
     params = %{"title" => album_title, "genres" => [%{"name" => genre_name}]}
 
-    Album.changeset(%Album{}, params)
+    %Album{}
+    |> Album.changeset(params)
     # genres 스키마에 있는 changeset을 사용하여 변환함.
     |> cast_assoc(:genres)
     |> Repo.insert()
@@ -56,9 +65,7 @@ defmodule MusicDB do
   def add_new_genre_assoc_album(album_title, genre_name) do
     Repo.get_by(Album, [{:title, album_title}])
     |> Ecto.build_assoc(:genres, [{:name, genre_name}])
-    # |> Ecto.Changeset.change()
-    # |> Genre.validate_genre()
-    |> Repo.insert()
+    |> IO.inspect()
   end
 
   def update_album_with_associations_genre(album_title, genre_name) do
@@ -69,7 +76,7 @@ defmodule MusicDB do
       |> Repo.preload(:genres)
 
     album
-    |> change
+    |> change()
     |> put_assoc(:genres, [new_genre | album.genres])
     |> Repo.update()
   end
@@ -102,6 +109,10 @@ defmodule MusicDB do
 
     Enum.map(artist.albums, &{&1.id, &1.title})
   end
+
+  # def add_artist_and_log(artist_name) do
+  #   Multi.new()
+  # end
 
   def get_track_over_duration(duration) do
     from(track in Track, [
