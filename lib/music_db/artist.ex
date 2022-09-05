@@ -18,38 +18,12 @@ defmodule MusicDB.Artist do
     has_many(:tracks, through: [:albums, :tracks])
   end
 
-  def validate_death_date(changeset, death_date) do
-    validate_change(changeset, :birth_date, fn _field, value ->
-      cond do
-        is_nil(value) -> []
-        Date.compare(value, death_date) == :lt -> []
-        true -> [{:death_date, "death_date must be later than birth_date"}]
-      end
-    end)
-  end
-
-  def changeset(artist, params) do
+  def changeset(artist, params \\ %{}) do
     artist
-    |> cast(params, [:name, :birth_date, :death_date])
-    |> validate_required([:name])
-  end
-
-  def add_new_artist_with_album({artist_name, aritst_birth_date, artist_death_date}, album_title) do
-    # 가데이터
-    # MusicDB.Artist.add_new_artist_with_album({"hi",~D[1999-01-01],~D[1900-01-01]},"new_album")
-
-    params = %{
-      "name" => artist_name,
-      "birth_date" => aritst_birth_date,
-      "death_date" => artist_death_date,
-      "albums" => [%{"title" => album_title}]
-    }
-
-    %__MODULE__{}
-    |> cast(params, [:name, :birth_date, :death_date])
-    |> validate_death_date(artist_death_date)
+    |> cast(params, [:name, :birth_date, :death_date, :ablums, :tracks])
     |> cast_assoc(:albums)
-    |> Repo.insert()
+    |> validate_required([:name])
+    |> validate_death_date()
   end
 
   def get_by_name(artist_name) do
@@ -79,5 +53,15 @@ defmodule MusicDB.Artist do
       {:select, artist.name},
       {:order_by, [desc: artist.name]}
     ])
+  end
+
+  defp validate_death_date(changeset) do
+    validate_change(changeset, :birth_date, fn _field, value ->
+      cond do
+        is_nil(value) -> []
+        Date.compare(value, changeset[:death_date]) == :lt -> []
+        true -> [{:death_date, "death_date must be later than birth_date"}]
+      end
+    end)
   end
 end

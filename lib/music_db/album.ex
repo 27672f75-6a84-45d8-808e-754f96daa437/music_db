@@ -18,18 +18,12 @@ defmodule MusicDB.Album do
     many_to_many(:genres, Genre, join_through: "albums_genres")
   end
 
-  def changeset(album, params) do
+  def changeset(album, params \\ %{}) do
     album
     |> cast(params, [:title])
+    |> cast_assoc(:tracks)
     |> validate_required([:title])
     |> validate_length(:title, [{:min, 1}, {:max, 10}])
-  end
-
-  def new_album_by_API(album_name) do
-    %__MODULE__{}
-    |> cast(%{"title" => album_name}, [:title])
-    |> validate_required([:title])
-    |> validate_length(:title, [{:min, 3}, {:max, 15}])
   end
 
   # union을 사용하면 중복결과 없이 고유한 결과만 나온다.

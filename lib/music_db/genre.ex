@@ -19,12 +19,4 @@ defmodule MusicDB.Genre do
     |> validate_inclusion(:name, ["jazz", "rock", "pop", "hiphop", "heavyrock"])
     |> unique_constraint(:name)
   end
-
-  def validate_genre(changset) do
-    changset
-    |> validate_required([:name])
-    |> validate_length(:name, [{:min, 1}, {:max, 15}])
-    |> validate_inclusion(:name, ["jazz", "rock", "pop", "hiphop", "heavyrock"])
-    |> unique_constraint(:name)
-  end
 end
