@@ -346,24 +346,26 @@ defmodule MusicDB do
       {:update, inc: [number_of_plays: 1]}
     ])
     |> Repo.update_all([])
+  end
 
-    # # album_query =
-    # from(album in Album, [
-    #   {:where, album.title == ^album_title},
-    #   {:right_join, track in Track},
-    #   {:on, album.id == track.album_id},
-    #   {:update, inc: [number_of_plays: 1]}
-    #   # {:preload, :tracks},
-    #   # {:select, album}
-    # ])
-    # |> Repo.update_all([])
+  def update_album_average_total_assoc_tracks_durations(album_title) do
+    total_duration =
+      from(track in Track, [
+        {:join, album in Album},
+        {:on, album.id == track.album_id},
+        {:where, album.title == ^album_title}
+      ])
+      |> Repo.all()
+      |> Enum.reduce([{:count, 0}, {:total_duration, 0}], fn track, acc ->
+        [{:count, acc[:count] + 1}, {:total_duration, acc[:total_duration] + track.duration}]
+      end)
 
-    # Repo.one(album_query).tracks
-
-    # from(album in album_query, [
-    #   {:update, inc: [number_of_plays: 1]}
-    # ])
-    # |> Repo.update_all([])
+    Repo.get_by(Album, [{:title, album_title}])
+    |> Ecto.Changeset.change(%{
+      average_total_tracks_durations:
+        Decimal.div(total_duration[:total_duration], total_duration[:count])
+    })
+    |> Repo.update()
   end
 
   def test() do
