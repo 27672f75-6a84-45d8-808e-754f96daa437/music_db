@@ -1,6 +1,7 @@
 defmodule MusicDB do
   alias MusicDB.{Album, Artist, Repo, Track, Genre}
   import Ecto.Query
+  import Ecto.Changeset
 
   def new_genre_duplicate(genre_name) do
     spawn(fn ->
@@ -20,6 +21,22 @@ defmodule MusicDB do
         {:error, changeset} -> IO.inspect(changeset.errors)
       end
     end)
+  end
+
+  def new_album_assoc_genre(album_title, genre_name) do
+    params = %{"title" => album_title, "genres" => [%{"name" => genre_name}]}
+
+    Album.changeset(%Album{}, params)
+    # genres 스키마에 있는 changeset을 사용하여 변환함.
+    |> cast_assoc(:genres)
+    |> Repo.insert()
+  end
+
+  # 이미 build_assoc으로 나온것을 changeset을 통해 검사하고싶음
+  def add_new_genre_assoc_album(album_title, genre_name) do
+    Repo.get_by(Album, [{:title, album_title}])
+    |> Ecto.build_assoc(:genres, [{:name, genre_name}])
+    |> Repo.insert()
   end
 
   def get_track_over_duration(duration) do
