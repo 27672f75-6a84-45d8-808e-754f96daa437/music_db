@@ -1,5 +1,5 @@
 defmodule MusicDB do
-  alias MusicDB.{Album, Artist, Repo, Track, Genre}
+  alias MusicDB.{Album, Artist, Repo, Track, Genre, Log}
   import Ecto.Query
   import Ecto.Changeset
   alias Ecto.Multi
@@ -110,9 +110,28 @@ defmodule MusicDB do
     Enum.map(artist.albums, &{&1.id, &1.title})
   end
 
-  # def add_artist_and_log(artist_name) do
-  #   Multi.new()
-  # end
+  def add_artist_and_log(artist_name) do
+    artist = Artist.changeset(%Artist{name: artist_name})
+    log = Log.changeset_for_insert(artist)
+
+    multi =
+      Multi.new()
+      |> Multi.insert(:artist, artist)
+      |> Multi.insert(:log, log)
+
+    case Repo.transaction(multi) do
+      {:ok, _results} ->
+        IO.puts("Operations were successful.")
+
+      {:error, :artist, changeset, _changes} ->
+        IO.puts("Artist insert failed")
+        IO.inspect(changeset.errors)
+
+      {:error, :log, changeset, _changes} ->
+        IO.puts("Log insert failed")
+        IO.inspect(changeset.errors)
+    end
+  end
 
   def get_track_over_duration(duration) do
     from(track in Track, [

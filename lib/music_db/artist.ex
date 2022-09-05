@@ -20,7 +20,7 @@ defmodule MusicDB.Artist do
 
   def changeset(artist, params \\ %{}) do
     artist
-    |> cast(params, [:name, :birth_date, :death_date, :ablums, :tracks])
+    |> cast(params, [:name, :birth_date, :death_date])
     |> cast_assoc(:albums)
     |> validate_required([:name])
     |> validate_death_date()
