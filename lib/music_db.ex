@@ -39,6 +39,19 @@ defmodule MusicDB do
     |> Repo.insert()
   end
 
+  def update_album_with_associations_genre(album_title, genre_name) do
+    new_genre = Genre.changeset(%Genre{}, %{"name" => genre_name})
+
+    album =
+      Repo.get_by(Album, [{:title, album_title}])
+      |> Repo.preload(:genres)
+
+    album
+    |> change
+    |> put_assoc(:genres, [new_genre | album.genres])
+    |> Repo.update()
+  end
+
   def get_track_over_duration(duration) do
     from(track in Track, [
       {:where, track.duration > ^duration},

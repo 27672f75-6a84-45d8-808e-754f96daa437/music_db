@@ -16,7 +16,7 @@ defmodule MusicDB.Genre do
     |> cast(params, [:name])
     |> validate_required([:name])
     |> validate_length(:name, [{:min, 1}, {:max, 15}])
-    |> validate_inclusion(:name, ["jazz", "rock", "pop", "hiphop"])
+    |> validate_inclusion(:name, ["jazz", "rock", "pop", "hiphop", "heavyrock"])
     |> unique_constraint(:name)
   end
 end
