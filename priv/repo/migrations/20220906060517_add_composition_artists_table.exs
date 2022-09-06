@@ -23,8 +23,8 @@ defmodule MusicDB.Repo.Migrations.AddCompositionArtistsTable do
     |> Repo.all()
     |> Enum.each(fn row ->
       Repo.insert_all("compositions_artists", [
-        [composition_id: row.id, artist_id: row.artist_id, role: "composer"]
-      ])
+        {:composition_id, row.id}, {:artist_id, row.artist_id}, {:role, "composer"}]
+      )
     end)
 
     # 더이상 필요가 없기때문에 지운다.
@@ -44,12 +44,16 @@ defmodule MusicDB.Repo.Migrations.AddCompositionArtistsTable do
     flush()
 
     #composition_artists에 있던 데이터를 다시 옮긴다.
-    from(ca in "compositions_artists", where: ca.role == "composer",
-        select: [:composition_id, :artist_id])
+    from(ca in "compositions_artists", [
+      {:where , ca.role == "composer"},
+      {:select , [:composition_id, :artist_id]}]
+      )
     |> Repo.all()
     |> Enum.each(fn row ->
       Repo.update_all(
-        from(c in "compositions", where: c.id == ^row.composition_id),
+        from(c in "compositions", [
+          {:where , c.id == ^row.composition_id}]),
+
         set: [artist_id: row.artist_id]
       )
       end)
