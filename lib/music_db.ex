@@ -1,8 +1,84 @@
 defmodule MusicDB do
   alias MusicDB.{Album, Artist, Repo, Track, Genre, Log}
+  alias SearchEngine
   import Ecto.Query
   import Ecto.Changeset
   alias Ecto.Multi
+
+  def add_artist_and_log(artist_name) do
+    artist = Artist.changeset(%Artist{name: artist_name})
+    log = Log.changeset_for_insert(artist)
+
+    multi =
+      Multi.new()
+      |> Multi.insert(:artist, artist)
+      |> Multi.insert(:log, log)
+
+    case Repo.transaction(multi) do
+      {:ok, _results} ->
+        IO.puts("Operations were successful.")
+
+      {:error, :artist, changeset, _changes} ->
+        IO.puts("Artist insert failed")
+        IO.inspect(changeset.errors)
+
+      {:error, :log, changeset, _changes} ->
+        IO.puts("Log insert failed")
+        IO.inspect(changeset.errors)
+    end
+  end
+
+  def add_new_artist_with_search_engine(artist_name) do
+    artist = %Artist{name: artist_name}
+    changeset = Artist.changeset(%Artist{}, %{"name" => artist_name})
+
+    multi =
+      Multi.new()
+      |> Multi.insert(:artist, changeset)
+      |> Multi.insert(:log, Log.changeset_for_insert(artist))
+      |> Multi.run(:search, SearchEngine, :update, ["extra argument"])
+
+    case Repo.transaction(multi) do
+      {:ok, _results} ->
+        IO.puts("Operations were successful.")
+
+      {:error, :artist, changeset, _changes} ->
+        IO.puts("Artist insert failed")
+        IO.inspect(changeset.errors)
+
+      {:error, :log, changeset, _changes} ->
+        IO.puts("Log insert failed")
+        IO.inspect(changeset.errors)
+
+      {:error, :search, changeset, _changes} ->
+        IO.puts("SearchEngine Update failed")
+        IO.inspect(changeset.errors)
+    end
+  end
+
+  def play_tracks(track_title) do
+    # 갖고오는 부분을 미리 실행한다 ?
+    # 아니면 one으로 받아온 결과를 검사하여 changeset으로 바꿔주는 함수 구현?
+    multi =
+      Multi.new()
+      |> Multi.one(:track, Track.by_title(track_title))
+      |> Multi.update(:track_play, fn %{track: %Track{} = track} ->
+        Track.changeset(track, %{"number_of_plays" => track.number_of_plays + 1})
+      end)
+
+    case Repo.transaction(multi) do
+      {:ok, _results} ->
+        IO.puts("Operations were successful.")
+
+      {:error, :track, changeset, _changes} ->
+        IO.puts("Unknown track title")
+        IO.inspect(changeset.errors)
+
+      {:error, :track1_play, changeset, _changes} ->
+        IO.puts("Track1 Can't Play")
+        IO.inspect(changeset.errors)
+    end
+  end
 
   def get_album_with_average_total_assoc_tracks_durations(album_title) do
     total_duration =
@@ -108,29 +184,6 @@ defmodule MusicDB do
       |> Repo.update()
 
     Enum.map(artist.albums, &{&1.id, &1.title})
-  end
-
-  def add_artist_and_log(artist_name) do
-    artist = Artist.changeset(%Artist{name: artist_name})
-    log = Log.changeset_for_insert(artist)
-
-    multi =
-      Multi.new()
-      |> Multi.insert(:artist, artist)
-      |> Multi.insert(:log, log)
-
-    case Repo.transaction(multi) do
-      {:ok, _results} ->
-        IO.puts("Operations were successful.")
-
-      {:error, :artist, changeset, _changes} ->
-        IO.puts("Artist insert failed")
-        IO.inspect(changeset.errors)
-
-      {:error, :log, changeset, _changes} ->
-        IO.puts("Log insert failed")
-        IO.inspect(changeset.errors)
-    end
   end
 
   def get_track_over_duration(duration) do

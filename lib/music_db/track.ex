@@ -1,6 +1,7 @@
 defmodule MusicDB.Track do
   use Ecto.Schema
   import Ecto.Query
+  import Ecto.Changeset
   alias MusicDB.{Album, Artist}
 
   schema "tracks" do
@@ -13,6 +14,12 @@ defmodule MusicDB.Track do
     timestamps()
 
     belongs_to(:album, Album)
+  end
+
+  def changeset(struct, params \\ %{}) do
+    struct
+    |> cast(params, [:title, :index, :number_of_plays])
+    |> validate_required([:title])
   end
 
   # track의 앨범 id와 track의 index 순으로 정렬하여 반환.

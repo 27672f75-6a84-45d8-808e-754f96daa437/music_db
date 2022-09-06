@@ -22,6 +22,7 @@ defmodule MusicDB.Album do
     album
     |> cast(params, [:title])
     |> cast_assoc(:tracks)
+    |> cast_assoc(:genres)
     |> validate_required([:title])
     |> validate_length(:title, [{:min, 1}, {:max, 10}])
   end
