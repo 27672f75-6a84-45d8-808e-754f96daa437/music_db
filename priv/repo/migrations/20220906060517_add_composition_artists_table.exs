@@ -4,7 +4,8 @@ defmodule MusicDB.Repo.Migrations.AddCompositionArtistsTable do
   alias MusicDB.Repo
 
   @table "compositions_artists"
-  def change do
+  # migrate를 수행할때 실행된다.
+  def up do
     create table(@table) do
       add :composition_id, references("compositions"), null: false
       add :artist_id, references("artists"), null: false
@@ -30,6 +31,30 @@ defmodule MusicDB.Repo.Migrations.AddCompositionArtistsTable do
     alter table("compositions") do
       remove :artist_id
     end
+  end
 
+  # rollback을 할때 실행된다.
+  def down do
+
+    # 우선 compositions에서 지웠던 컬럼을 다시 추가하고
+    alter table("compositions") do
+      add :artist_id, references("artists")
+    end
+
+    flush()
+
+    #composition_artists에 있던 데이터를 다시 옮긴다.
+    from(ca in "compositions_artists", where: ca.role == "composer",
+        select: [:composition_id, :artist_id])
+    |> Repo.all()
+    |> Enum.each(fn row ->
+      Repo.update_all(
+        from(c in "compositions", where: c.id == ^row.composition_id),
+        set: [artist_id: row.artist_id]
+      )
+      end)
+
+    # 데이터를 다 옮겼으니 해당 테이블을 제거한다.
+    drop table("compositions_artists")
   end
 end
