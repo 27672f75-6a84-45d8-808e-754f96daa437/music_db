@@ -87,17 +87,30 @@ defmodule MusicDB do
     end
   end
 
+  def play_play() do
+    Task.start(fn -> play_tracks2("All Blues") end)
+    Task.start(fn -> play_tracks2("All Blues") end)
+    Task.start(fn -> play_tracks2("All Blues") end)
+    Task.start(fn -> play_tracks2("All Blues") end)
+    Task.start(fn -> play_tracks2("All Blues") end)
+
+    Process.sleep(1_000)
+  end
+
   def play_tracks2(track_title) do
     fn ->
       track_title
       |> Track.by_title()
-      |> Repo.one()
+      |> Repo.one!()
       |> then(fn
         {:ok, track} ->
           {:ok, Track.changeset(track, %{"number_of_plays" => track.number_of_plays + 1})}
 
         nil ->
           {:error, nil}
+
+        track ->
+          Track.changeset(track, %{"number_of_plays" => track.number_of_plays + 1})
       end)
       |> then(fn
         {:ok, changeset} ->
@@ -105,6 +118,9 @@ defmodule MusicDB do
 
         {:error, error} ->
           {:error, error}
+
+        changeset ->
+          changeset |> Repo.update()
       end)
     end
     |> Repo.transaction()
