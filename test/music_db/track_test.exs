@@ -26,11 +26,11 @@ defmodule MusicDB.TrackTest do
     end
 
     tasks = [
-      Task.start(play_function),
-      Task.start(play_function),
-      Task.start(play_function),
-      Task.start(play_function),
-      Task.start(play_function)
+      Task.start(fn -> play_function |> MusicDB.Repo.transaction() end),
+      Task.start(fn -> play_function |> MusicDB.Repo.transaction() end),
+      Task.start(fn -> play_function |> MusicDB.Repo.transaction() end),
+      Task.start(fn -> play_function |> MusicDB.Repo.transaction() end),
+      Task.start(fn -> play_function |> MusicDB.Repo.transaction() end)
     ]
 
     Enum.map(tasks, fn {:ok, task} ->
