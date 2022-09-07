@@ -24,7 +24,7 @@ defmodule MusicDB.Album do
     |> cast_assoc(:tracks)
     |> cast_assoc(:genres)
     |> validate_required([:title])
-    |> validate_length(:title, [{:min, 1}, {:max, 10}])
+    |> validate_length(:title, [{:min, 1}, {:max, 100}])
   end
 
   # union을 사용하면 중복결과 없이 고유한 결과만 나온다.
@@ -149,5 +149,12 @@ defmodule MusicDB.Album do
     by_artist(artist_name)
     |> with_tracks_longer_than(duration)
     |> title_only()
+  end
+
+  def get_album_by_title(album_query \\ __MODULE__, album_title) do
+    from(album in album_query, [
+      {:where, album.title == ^album_title},
+      {:lock, "FOR UPDATE"}
+    ])
   end
 end
