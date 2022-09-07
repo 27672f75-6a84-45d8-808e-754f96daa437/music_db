@@ -62,9 +62,16 @@ defmodule MusicDB do
     multi =
       Multi.new()
       |> Multi.one(:track, Track.by_title(track_title))
-      |> Multi.update(:track_play, fn %{track: %Track{} = track} ->
-        Track.changeset(track, %{"number_of_plays" => track.number_of_plays + 1})
-      end)
+      |> Multi.update(
+        :track_play,
+        fn
+          %{track: %Track{} = track} ->
+            Track.changeset(track, %{"number_of_plays" => track.number_of_plays + 1})
+
+            # %{track: nil} ->
+            #   %Ecto.Changeset{}
+        end
+      )
 
     case Repo.transaction(multi) do
       {:ok, _results} ->
@@ -78,6 +85,53 @@ defmodule MusicDB do
         IO.puts("Track1 Can't Play")
         IO.inspect(changeset.errors)
     end
+  end
+
+  def play_tracks2(track_title) do
+    fn ->
+      track_title
+      |> Track.by_title()
+      |> Repo.one()
+      |> then(fn
+        {:ok, track} ->
+          {:ok, Track.changeset(track, %{"number_of_plays" => track.number_of_plays + 1})}
+
+        nil ->
+          {:error, nil}
+      end)
+      |> then(fn
+        {:ok, changeset} ->
+          changeset |> Repo.update()
+
+        {:error, error} ->
+          {:error, error}
+      end)
+    end
+    |> Repo.transaction()
+  end
+
+  def delte_track(track_name) do
+    album = Repo.get_by(Track, [{:title, track_name}])
+
+    case album do
+      nil ->
+        IO.inspect("Unkwon album")
+
+      _ ->
+        Multi.new()
+        |> Multi.delete(:track, album)
+        |> Multi.insert(:log, Log.changeset_for_insert(album))
+        |> Repo.transaction()
+    end
+  end
+
+  def add_new_artist_album(artist_name, album_title) do
+    Multi.new()
+    |> Multi.insert(:artist, Artist.changeset(%Artist{}, %{name: artist_name}))
+    |> Multi.insert(:album, fn %{artist: artist} ->
+      Ecto.build_assoc(artist, :albums, %{title: album_title})
+    end)
+    |> Repo.transaction()
   end
 
   def get_album_with_average_total_assoc_tracks_durations(album_title) do

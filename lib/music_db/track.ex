@@ -77,11 +77,12 @@ defmodule MusicDB.Track do
     ])
   end
 
-  def by_title(track_query \\ __MODULE__, title) do
+  def by_title(title) do
     from(
-      track in track_query,
+      track in __MODULE__,
       [
-        {:where, track.title == ^title}
+        {:where, track.title == ^title},
+        {:lock, "FOR UPDATE"}
       ]
     )
   end
