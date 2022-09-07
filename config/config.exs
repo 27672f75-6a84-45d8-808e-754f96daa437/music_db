@@ -7,4 +7,6 @@ config :music_db, MusicDB.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
+  # migration_primary_key: [id: :code, type: :string],
+  pool: Ecto.Adapters.SQL.Sandbox,
   port: 15432
