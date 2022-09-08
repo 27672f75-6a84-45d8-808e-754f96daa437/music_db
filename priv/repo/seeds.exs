@@ -1,5 +1,5 @@
 alias MusicDB.Repo
-alias MusicDB.{Artist, Album, Track, Genre}
+alias MusicDB.{Artist, Album, Track, Genre, AlbumWithEmbeds, ArtistEmbed, TrackEmbed}
 
 %Artist{
   name: "Miles Davis",
@@ -149,3 +149,38 @@ alias MusicDB.{Artist, Album, Track, Genre}
   ]
 }
 |> Repo.insert()
+
+if Repo.using_postgres?() do
+  Repo.insert! %AlbumWithEmbeds{
+    title: "Moanin'",
+    artist: %ArtistEmbed{
+      name: "Art Blakey"
+    },
+    tracks: [
+      %TrackEmbed{
+        title: "Moanin'",
+        duration: 575
+      },
+      %TrackEmbed{
+        title: "Are You Real",
+        duration: 290
+      },
+      %TrackEmbed{
+        title: "Along Came Betty",
+        duration: 372
+      },
+      %TrackEmbed{
+        title: "The Drum Thunder Suite",
+        duration: 453
+      },
+      %TrackEmbed{
+        title: "Blues March",
+        duration: 377
+      },
+      %TrackEmbed{
+        title: "Come Rain or Come Shine",
+        duration: 349
+      }
+    ]
+  }
+end
