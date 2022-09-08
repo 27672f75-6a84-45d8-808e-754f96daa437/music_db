@@ -1,9 +1,44 @@
 defmodule MusicDB do
-  alias MusicDB.{Album, Artist, Repo, Track, Genre, Log}
+  alias MusicDB.{Album, Artist, Repo, Track, Genre, Log, AlbumWithEmbeds, TrackEmbed}
   alias SearchEngine
   import Ecto.Query
   import Ecto.Changeset
   alias Ecto.Multi
+
+  def insert_new_ablbum_with_embeds(album_title) do
+    params = %{
+      title: album_title,
+      artist: %{name: "YOUNG"},
+      tracks: [%{title: "KYU", duration: 500}]
+    }
+
+    AlbumWithEmbeds.changeset(%AlbumWithEmbeds{}, params)
+    |> Repo.insert()
+  end
+
+  def update_album_with_embeds(album_title) do
+    fn ->
+      AlbumWithEmbeds.by_title(album_title)
+      |> Repo.one()
+      |> change()
+      |> put_embed(:artist, %{name: "Arthur Blakey"})
+      |> put_embed(:tracks, [%TrackEmbed{title: "Moanin'"}])
+      # embed를 넣은뒤 검사를 진행 !
+      |> AlbumWithEmbeds.changeset(%{})
+      |> Repo.update()
+    end
+    |> Repo.transaction()
+  end
+
+  def insert_ska_genres_on_conflict_nothing() do
+    Repo.insert_all("genres", [[{:name, "ska"}, {:wiki_tag, "Ska_music"}]], [
+      {:on_conflict, :nothing}
+    ])
+
+    Repo.insert_all("genres", [[{:name, "ska"}, {:wiki_tag, "Ska_music"}]], [
+      {:on_conflict, :nothing}
+    ])
+  end
 
   def add_artist_and_log(artist_name) do
     artist = Artist.changeset(%Artist{name: artist_name})
@@ -146,6 +181,8 @@ defmodule MusicDB do
     |> Multi.insert(:artist, Artist.changeset(%Artist{}, %{name: artist_name}))
     |> Multi.insert(:album, fn %{artist: artist} ->
       Ecto.build_assoc(artist, :albums, %{title: album_title})
+      # build_assoc으로 관계 추가후 changeset으로 검사 !
+      |> Album.changeset(%{})
     end)
     |> Repo.transaction()
   end
@@ -224,6 +261,8 @@ defmodule MusicDB do
     album
     |> change()
     |> put_assoc(:genres, [new_genre | album.genres])
+    # 관계 추가후 changset으로 검사 !
+    |> Album.changeset(%{})
     |> Repo.update()
   end
 
