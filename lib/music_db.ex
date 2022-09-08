@@ -5,6 +5,19 @@ defmodule MusicDB do
   import Ecto.Changeset
   alias Ecto.Multi
 
+  def insert_note_in_artist() do
+    artist = Repo.get_by(Artist, name: "Bill Evans")
+
+    Ecto.build_assoc(artist, :notes_with_fk_fields, %{
+      note: "My fave vibes player",
+      author: "darin"
+    })
+    |> Repo.insert!()
+
+    artist = Repo.preload(artist, :notes_with_fk_fields)
+    artist.notes_with_fk_fields
+  end
+
   def insert_new_ablbum_with_embeds(album_title) do
     params = %{
       title: album_title,

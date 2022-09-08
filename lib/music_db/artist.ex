@@ -2,7 +2,7 @@ defmodule MusicDB.Artist do
   use Ecto.Schema
   import Ecto.Query
   import Ecto.Changeset
-  alias MusicDB.{Album, Composition}
+  alias MusicDB.{Album, Composition, Note}
 
   schema "artists" do
     field(:name)
@@ -16,6 +16,7 @@ defmodule MusicDB.Artist do
     # 해당 albums를 사용하여 관계있는 :tracks 스키마를 가르키게끔 설정한다.
     # 이 :through 연결은 추후에 아티스트를 가져올때 앨범과 그 앨범에 속한 트랙을 가져오도록 할수있다.
     has_many(:tracks, through: [:albums, :tracks])
+    has_many(:notes_with_fk_fields, Note)
     many_to_many(:compositions, Composition, join_through: "compostions_artists")
   end
 

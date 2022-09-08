@@ -2,7 +2,7 @@ defmodule MusicDB.Track do
   use Ecto.Schema
   import Ecto.Query
   import Ecto.Changeset
-  alias MusicDB.{Album, Artist}
+  alias MusicDB.{Album, Artist, Note}
 
   schema "tracks" do
     field(:title, :string)
@@ -12,7 +12,7 @@ defmodule MusicDB.Track do
     field(:index, :integer)
     field(:number_of_plays, :integer)
     timestamps()
-
+    has_many(:notes_with_fk_fields, Note)
     belongs_to(:album, Album)
   end
 
