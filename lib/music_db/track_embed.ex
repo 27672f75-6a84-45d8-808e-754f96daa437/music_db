@@ -6,4 +6,10 @@ defmodule MusicDB.TrackEmbed do
     field(:title, :string)
     field(:duration, :integer)
   end
+
+  def changeset(struct, params \\ %{}) do
+    struct
+    |> cast(params, [:title, :durations])
+    |> validate_required([:title])
+  end
 end
