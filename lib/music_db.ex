@@ -1,9 +1,42 @@
 defmodule MusicDB do
-  alias MusicDB.{Album, Artist, Repo, Track, Genre, Log}
+  alias MusicDB.{Album, Artist, Repo, Track, Genre, Log, AlbumWithEmbeds, TrackEmbed}
   alias SearchEngine
   import Ecto.Query
   import Ecto.Changeset
   alias Ecto.Multi
+
+  def insert_new_ablbum_with_embeds(album_title) do
+    params = %{
+      title: album_title,
+      artist: %{name: "YOUNG"},
+      tracks: [%{title: "KYU", duration: 500}]
+    }
+
+    AlbumWithEmbeds.changeset(%AlbumWithEmbeds{}, params)
+    |> Repo.insert()
+  end
+
+  def update_album_with_embeds(album_title) do
+    fn ->
+      AlbumWithEmbeds.by_title(album_title)
+      |> Repo.one()
+      |> change()
+      |> put_embed(:artist, %{name: "Arthur Blakey"})
+      |> put_embed(:tracks, [%TrackEmbed{title: "Moanin'"}])
+      |> Repo.update()
+    end
+    |> Repo.transaction()
+  end
+
+  def insert_ska_genres_on_conflict_nothing() do
+    Repo.insert_all("genres", [[{:name, "ska"}, {:wiki_tag, "Ska_music"}]], [
+      {:on_conflict, :nothing}
+    ])
+
+    Repo.insert_all("genres", [[{:name, "ska"}, {:wiki_tag, "Ska_music"}]], [
+      {:on_conflict, :nothing}
+    ])
+  end
 
   def add_artist_and_log(artist_name) do
     artist = Artist.changeset(%Artist{name: artist_name})

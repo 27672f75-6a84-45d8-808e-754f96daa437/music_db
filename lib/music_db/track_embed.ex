@@ -9,7 +9,7 @@ defmodule MusicDB.TrackEmbed do
 
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:title, :durations])
+    |> cast(params, [:title, :duration])
     |> validate_required([:title])
   end
 end
