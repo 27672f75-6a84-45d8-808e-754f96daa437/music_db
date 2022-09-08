@@ -23,6 +23,8 @@ defmodule MusicDB do
       |> change()
       |> put_embed(:artist, %{name: "Arthur Blakey"})
       |> put_embed(:tracks, [%TrackEmbed{title: "Moanin'"}])
+      # embed를 넣은뒤 검사를 진행 !
+      |> AlbumWithEmbeds.changeset(%{})
       |> Repo.update()
     end
     |> Repo.transaction()
@@ -163,6 +165,8 @@ defmodule MusicDB do
     |> Multi.insert(:artist, Artist.changeset(%Artist{}, %{name: artist_name}))
     |> Multi.insert(:album, fn %{artist: artist} ->
       Ecto.build_assoc(artist, :albums, %{title: album_title})
+      # build_assoc으로 관계 추가후 changeset으로 검사 !
+      |> Album.changeset(%{})
     end)
     |> Repo.transaction()
   end
@@ -241,6 +245,8 @@ defmodule MusicDB do
     album
     |> change()
     |> put_assoc(:genres, [new_genre | album.genres])
+    # 관계 추가후 changset으로 검사 !
+    |> Album.changeset(%{})
     |> Repo.update()
   end
 
